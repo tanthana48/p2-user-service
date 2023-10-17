@@ -14,10 +14,11 @@ def create_app() -> Flask:
     app.register_blueprint(user_service)
 
     db_uri = os.environ.get(
-        "DATABASE_URI", 
-        'mysql+pymysql://dev:devpass@db/p2-database'
-    )
+    "DATABASE_URI", 
+    'mysql+pymysql://dev:devpass@localhost:3306/p2-database'
+)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+
 
     db.init_app(app)
     bcrypt.init_app(app)

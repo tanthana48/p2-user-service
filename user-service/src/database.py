@@ -7,7 +7,7 @@ bcrypt = Bcrypt()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    _password_hash = db.Column("password", db.String(255), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     role = db.Column(db.String(80), unique=False, nullable=False)
 
@@ -17,8 +17,8 @@ class User(db.Model):
 
     @password.setter
     def password(self, password):
-        self._password = bcrypt.generate_password_hash(password).decode("utf-8")
+        self._password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
 
     def check_password(self, password):
-        return bcrypt.check_password_hash(self._password, password)
+        return bcrypt.check_password_hash(self._password_hash, password)
 
