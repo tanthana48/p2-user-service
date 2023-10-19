@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from authentication.user_service import user_service
+from uploading.video_uploading_service import video_uploading_service
 from database import db, bcrypt
 
 def create_app() -> Flask:
@@ -12,6 +13,7 @@ def create_app() -> Flask:
 
     app.secret_key = os.environ.get("SECRET_KEY", 'your_secret_key')
     app.register_blueprint(user_service)
+    app.register_blueprint(video_uploading_service)
 
     db_uri = os.environ.get(
     "DATABASE_URI", 
