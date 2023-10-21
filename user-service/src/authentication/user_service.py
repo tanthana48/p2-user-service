@@ -109,7 +109,7 @@ def login_user():
 @user_service.route('/api/users', methods=['GET'])
 def get_users():
     all_users = User.query.all()
-    user_list = [{'id': u.id, 'username': u.username, 'email': u.email} for u in all_users]
+    user_list = [{'id': u.id, 'username': u.username, 'email': u.email, 'role': u.role} for u in all_users]
     return jsonify({'users': user_list})
 
 @user_service.route('/api/whoami', methods=['GET'])
