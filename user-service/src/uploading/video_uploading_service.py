@@ -3,18 +3,17 @@ from database import User
 from botocore.exceptions import NoCredentialsError
 import boto3,time
 
-app = Flask(__name__)
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
 SECRET_KEY = 'your_secret_key'
 
-AWS_ACCESS_KEY_ID = '...'  
-AWS_SECRET_ACCESS_KEY = '...'  
-AWS_BUCKET_NAME = '...' 
+AWS_ACCESS_KEY_ID = 'AKIASQQQG2XF4KSBPOMG'  
+AWS_SECRET_ACCESS_KEY = 'd78LendV+ExAfroowAQkIL3tN+YyNviJOANolBz4'  
+AWS_BUCKET_NAME = 'flasks3scalable' 
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
-@app.route('/upload', methods=['POST'])
+@video_uploading_service.route('/api/upload', methods=['POST'])
 def upload_video():
     try:
         video_file = request.files['video']
@@ -41,7 +40,7 @@ def upload_video():
 
 def is_video_too_long(video_file):
     max_duration = 60 
-    if video_file.len > max_duration: return True 
+    if video_file.content_length > max_duration: return True 
     return False
 
 def generate_presigned_url(filename):
@@ -51,6 +50,3 @@ def generate_presigned_url(filename):
         ExpiresIn=3600  
     )
     return presigned_url
-
-if __name__ == '__main__':
-    app.run(debug=True)
