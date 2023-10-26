@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint
-from database import User
+from database import User, Video, db
 from botocore.exceptions import NoCredentialsError
 import boto3,time
 
@@ -17,6 +17,8 @@ s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_a
 def upload_video():
     try:
         video_file = request.files['video']
+        video_title = request.form['title']
+        video_description = request.form['description']
         if video_file:
             if not is_video_too_long(video_file):
                 username = request.form['username']
@@ -25,6 +27,14 @@ def upload_video():
                     file_name = f"{username}_{int(time.time())}.mp4"
                     try:
                         s3_client.upload_fileobj(video_file, AWS_BUCKET_NAME, file_name)
+                        new_video = Video(
+                            title=video_title,
+                            description=video_description,
+                            user_id=user.id,
+                            s3_filename=file_name
+                        )
+                        db.session.add(new_video)
+                        db.session.commit()
                         presigned_url = generate_presigned_url(video_file.filename)
                         return jsonify({'presigned_url': presigned_url}), 200
                     except NoCredentialsError:
@@ -50,3 +60,27 @@ def generate_presigned_url(filename):
         ExpiresIn=3600  
     )
     return presigned_url
+
+@video_uploading_service.route('/api/videos', methods=['GET'])
+def get_videos():
+    try:
+        videos = Video.query.all()
+        if not videos:
+            return jsonify({'message': 'No videos found'}), 404
+
+        video_list = [{
+            'id': video.id,
+            'title': video.title,
+            'description': video.description,
+            'date': video.date,
+            'views': video.views,
+            'user_id': video.user_id,
+            's3_filename': video.s3_filename,
+            'hls_filename': video.hls_filename,
+            'thumbnail_filename': video.thumbnail_filename
+        } for video in videos]
+
+        return jsonify({'videos': video_list}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

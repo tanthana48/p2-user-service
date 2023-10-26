@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+import datetime
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -22,21 +23,16 @@ class User(db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self._password_hash, password)
 
-from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
 class Video(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable=False)
-    description = db.Column(db.String, nullable=True)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
+    title = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     views = db.Column(db.Integer, default=0)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    s3_filename = db.Column(db.String, nullable=False)
-    hls_filename = db.Column(db.String, nullable=True)
-    thumbnail_filename = db.Column(db.String, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    s3_filename = db.Column(db.String(255), nullable=False)
+    hls_filename = db.Column(db.String(255), nullable=True)
+    thumbnail_filename = db.Column(db.String(255), nullable=True)
 
     user = db.relationship("User", backref="videos")
