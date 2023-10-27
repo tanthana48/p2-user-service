@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, Blueprint
 from database import User, Video, db
 from botocore.exceptions import NoCredentialsError
 import boto3,time
+from redis import Redis
+from rq import Queue
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
@@ -12,6 +14,9 @@ AWS_SECRET_ACCESS_KEY = 'd78LendV+ExAfroowAQkIL3tN+YyNviJOANolBz4'
 AWS_BUCKET_NAME = 'flasks3scalable' 
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+redis_conn = Redis(host='localhost', port=6379, db=0)
+queue = Queue(connection=redis_conn)
 
 @video_uploading_service.route('/api/upload', methods=['POST'])
 def upload_video():
@@ -35,7 +40,14 @@ def upload_video():
                         )
                         db.session.add(new_video)
                         db.session.commit()
+                        video = Video.query.filter_by(s3_filename=file_name).first()
                         presigned_url = generate_presigned_url(video_file.filename)
+                        video_details = {
+                            'id': video.id,
+                            's3_filename': file_name
+                        }
+                        job = queue.enqueue('process_video_task', video_details)
+
                         return jsonify({'presigned_url': presigned_url}), 200
                     except NoCredentialsError:
                         return jsonify({'error': 'AWS credentials not available'}), 403
