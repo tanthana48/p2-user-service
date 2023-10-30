@@ -45,6 +45,7 @@ def confirm_upload():
                             s3_filename=video_name)
             db.session.add(new_video)
             db.session.commit()
+            r.publish('video_upload', 'New video uploaded and ready for processing')
             return jsonify({'message': 'Video uploaded successfully'}), 200
         except NoCredentialsError:
             return jsonify({'error': 'AWS credentials not available'}), 403
