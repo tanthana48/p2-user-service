@@ -16,6 +16,7 @@ AWS_BUCKET_NAME = 'flasks3scalable'
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 r = Redis(host='localhost', port=6379, decode_responses=True)
+pubsub = r.pubsub()
 
 @video_uploading_service.route('/api/get-presigned-url', methods=['POST'])
 def get_presigned_url():
@@ -43,6 +44,8 @@ def confirm_upload():
                             s3_filename=video_name)
             db.session.add(new_video)
             db.session.commit()
+            r.publish('video_upload', video_name)
+            print(f"Published video name: {video_name}")
             return jsonify({'message': 'Video uploaded successfully'}), 200
         except NoCredentialsError:
             return jsonify({'error': 'AWS credentials not available'}), 403
