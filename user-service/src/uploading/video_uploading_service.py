@@ -3,16 +3,14 @@ from database import User, Video, db
 from botocore.exceptions import NoCredentialsError
 import boto3,time
 from redis import Redis
-import logging
 
-logging.basicConfig(level=logging.INFO)
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
 SECRET_KEY = 'your_secret_key'
 
-AWS_ACCESS_KEY_ID = 'AKIASQQQG2XF4KSBPOMG'  
-AWS_SECRET_ACCESS_KEY = 'd78LendV+ExAfroowAQkIL3tN+YyNviJOANolBz4'  
+AWS_ACCESS_KEY_ID = 'AKIASQQQG2XF4V573GL6'  
+AWS_SECRET_ACCESS_KEY = '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'  
 AWS_BUCKET_NAME = 'flasks3scalable' 
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -25,9 +23,9 @@ def get_presigned_url():
     file_name = data['fileName']
     file_type = data['fileType']
 
-    logging.info(f"Generated presigned URL with ContentType: {file_type}")
     presigned_url = generate_presigned_url(file_name, file_type)
     return jsonify({'presigned_url': presigned_url}), 200
+
 
 @video_uploading_service.route('/api/confirm-upload', methods=['POST'])
 def confirm_upload():
