@@ -4,6 +4,7 @@ from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
 import os
+import m3u8
 
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
@@ -18,6 +19,33 @@ s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_a
 
 r = Redis(host='localhost', port=6379, decode_responses=True)
 pubsub = r.pubsub()
+
+@video_uploading_service.route('/api/get-presigned-m3u8', methods=['POST'])
+def get_presigned_m3u8():
+    data = request.json
+    hls_filename = data['hls_filename']
+
+    m3u8_obj = s3_client.get_object(Bucket=AWS_BUCKET_NAME, Key=hls_filename)
+    m3u8_content = m3u8_obj['Body'].read().decode('utf-8')
+
+    playlist = m3u8.loads(m3u8_content)
+
+    # Replace each .ts segment URL with a presigned URL
+    for segment in playlist.segments:
+        segment.uri = generate_presigned_url_get(segment.uri)
+
+    # Return the modified m3u8 content
+    return jsonify({'m3u8_content': playlist.dumps()}), 200
+
+@video_uploading_service.route('/api/get-presigned-url-thumbnail', methods=['POST'])
+def get_presigned_url_thumbnail():
+    data = request.json
+    thumbnail_filename = data['thumbnail_filename']
+
+    presigned_url = generate_presigned_url_get(thumbnail_filename)
+    print(presigned_url)
+    return jsonify({'presigned_url': presigned_url}), 200
+
 
 @video_uploading_service.route('/api/get-presigned-url', methods=['POST'])
 def get_presigned_url():
@@ -58,6 +86,17 @@ def confirm_upload():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def generate_presigned_url_get(filename):
+    presigned_url = s3_client.generate_presigned_url(
+        'get_object',
+        Params={
+            'Bucket': AWS_BUCKET_NAME,
+            'Key': filename
+        },
+        ExpiresIn=3600
+    )
+    return presigned_url
+
 def generate_presigned_url(filename, file_type):
     presigned_url = s3_client.generate_presigned_url(
         'put_object',
@@ -70,6 +109,17 @@ def generate_presigned_url(filename, file_type):
     )
     return presigned_url
 
+@video_uploading_service.route('/api/increment-views', methods=['POST'])
+def increment_views():
+    video_id = request.json['video_id']
+    video = Video.query.get(video_id)
+    
+    if video:
+        video.views += 1
+        db.session.commit()
+        return jsonify(success=True, views=video.views)
+    else:
+        return jsonify(error="Video not found", video_id=video_id), 404
 
 @video_uploading_service.route('/api/videos', methods=['GET'])
 def get_videos():
@@ -94,3 +144,4 @@ def get_videos():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
