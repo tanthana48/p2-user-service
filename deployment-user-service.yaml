@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 3  
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: user-service-image:latest 
+          ports:
+            - containerPort: 8080  
+          env:
+            - name: SECRET_KEY
+              value: your_secret_key
+            - name: DATABASE_URI
+              value: mysql+pymysql://dev:devpass@localhost:3306/p2-database'
+            - name: AWS_ACCESS_KEY_ID
+              value: AKIASQQQG2XF4V573GL6
+            - name: AWS_SECRET_ACCESS_KEY
+              value: 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
+            - name: AWS_BUCKET_NAME
+              value: flasks3scalable
+
+            
+
