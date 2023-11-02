@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, Blueprint
 from database import User, Video, db
 from botocore.exceptions import NoCredentialsError
-import boto3,time
+import boto3
 from redis import Redis
+import os
 
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
@@ -37,14 +38,19 @@ def confirm_upload():
         video_description = data['description']
         username = data['username']
         try:
+            base_name = os.path.splitext(video_name)[0]
+            thumbnail_filename = base_name + '_converted.jpg'
+            hls_filename = base_name + '_converted.m3u8'
+            r.rpush('video_name', video_name)
             user = User.query.filter_by(username=username).first()
             new_video = Video(title=video_title, 
                             description=video_description,
                             user_id=user.id,
-                            s3_filename=video_name)
+                            s3_filename=video_name,
+                            thumbnail_filename=thumbnail_filename,
+                            hls_filename = hls_filename)
             db.session.add(new_video)
             db.session.commit()
-            r.publish('video_upload', video_name)
             print(f"Published video name: {video_name}")
             return jsonify({'message': 'Video uploaded successfully'}), 200
         except NoCredentialsError:
