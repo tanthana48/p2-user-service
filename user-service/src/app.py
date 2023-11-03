@@ -15,10 +15,13 @@ def create_app() -> Flask:
     app.register_blueprint(user_service)
     app.register_blueprint(video_uploading_service)
 
-    db_uri = os.environ.get(
-    "DATABASE_URI", 
-    'mysql+pymysql://dev:devpass@localhost:3306/p2-database'
-)
+    ums_db_name = os.environ.get("UMS_DB_NAME")
+    ums_db_username = os.environ.get("UMS_DB_USERNAME")
+    ums_db_password = os.environ.get("UMS_DB_PASSWORD")
+    ums_db_port = os.environ.get("UMS_DB_PORT", 3306)
+    ums_db_ip = os.environ.get("UMS_DB_IP")
+    db_uri = f'mysql+pymysql://{ums_db_username}:{ums_db_password}@{ums_db_ip}:{ums_db_port}/{ums_db_name}'
+
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 
 
@@ -34,4 +37,4 @@ app = create_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(debug=True, port=port)
+    app.run(debug=True, port=port, host='0.0.0.0')
