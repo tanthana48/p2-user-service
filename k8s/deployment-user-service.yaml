@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-service
+  name: user-service-deployment
 spec:
   replicas: 3  
   selector:
@@ -14,20 +14,35 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: user-service-image:latest 
+          image: ghcr.io/tanthana48/p2-user-service/p2-user-serivce:latest
           ports:
             - containerPort: 8080  
           env:
             - name: SECRET_KEY
-              value: your_secret_key
-            - name: DATABASE_URI
-              value: mysql+pymysql://dev:devpass@localhost:3306/p2-database'
+              value: "your_secret_key"
+            - name: UMS_DB_NAME
+              value: "p2-database"
+            - name: UMS_DB_USERNAME
+              value: "dev"
+            - name: UMS_DB_PASSWORD
+              value: "devpass"
+            - name: UMS_DB_PORT
+              value: "3306"
+            - name: UMS_DB_IP
+              value: "mariadb-service.default.svc"
+            - name: PORT
+              value: "8080"
             - name: AWS_ACCESS_KEY_ID
               value: AKIASQQQG2XF4V573GL6
             - name: AWS_SECRET_ACCESS_KEY
               value: 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
             - name: AWS_BUCKET_NAME
               value: flasks3scalable
-
+            - name: REDIS_HOST
+              value: "redis-service.default.svc"
+            - name: REDIS_PORT
+              value: "6379"
+      imagePullSecrets:
+        - name: regcred
             
 

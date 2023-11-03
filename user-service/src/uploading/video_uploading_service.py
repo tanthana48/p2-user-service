@@ -16,8 +16,10 @@ AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 
 s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
-r = Redis(host='redis', port=6379, decode_responses=True)
+r = Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 pubsub = r.pubsub()
 
 @video_uploading_service.route('/api/get-presigned-m3u8', methods=['POST'])
