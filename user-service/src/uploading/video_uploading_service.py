@@ -1,12 +1,10 @@
 from flask import Flask, request, jsonify, Blueprint
-from database import User, Video, Like, db
+from database import User, Video, Like, Comment, db
 from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
 import os
 import m3u8
-from socket_instance import socketio
-from flask_socketio import join_room, leave_room, emit
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
@@ -169,7 +167,7 @@ def handle_like_video():
 
 # @socketio.on('unlike-video')
 @video_uploading_service.route('/api/descrement-likes', methods=['POST'])
-def handle_unlike_video(data):
+def handle_unlike_video():
     user_id = request.json['user_id']
     user_id = User.query.get(user_id)
     video_id = request.json['video_id']
@@ -186,3 +184,26 @@ def handle_unlike_video(data):
 
 def get_like_count_for_video(video_id):
     return Like.query.filter_by(video_id=video_id).count()
+
+@video_uploading_service.route('/api/post-comment', methods=['POST'])
+def handle_post_comment():
+    user_id = request.json['user_id']
+    user_id = User.query.get(user_id)
+    video_id = request.json['video_id']
+    video_id = Video.query.get(video_id) 
+    text = request.json['text']
+    
+    if not text.strip():
+        return jsonify({'message': 'No text'}), 404
+
+    if user_id and video_id:
+        new_comment = Comment(user_id=user_id, video_id=video_id, text=text)
+        db.session.add(new_comment)
+        db.session.commit()
+
+        # emit('new-comment', {
+        #     'user_id': user_id,
+        #     'video_id': video_id,
+        #     'text': text,
+        #     'timestamp': new_comment.created_at.isoformat()
+        # }, room=video_id)
