@@ -10,7 +10,6 @@ def create_app() -> Flask:
     app = Flask(__name__)
   
     CORS(app)
-
     app.secret_key = os.environ.get("SECRET_KEY", 'your_secret_key')
     app.register_blueprint(user_service)
     app.register_blueprint(video_uploading_service)
@@ -23,7 +22,7 @@ def create_app() -> Flask:
     db_uri = f'mysql+pymysql://{ums_db_username}:{ums_db_password}@{ums_db_ip}:{ums_db_port}/{ums_db_name}'
 
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-
+    # socketio.init_app(app)
 
     db.init_app(app)
     bcrypt.init_app(app)
@@ -35,6 +34,9 @@ def create_app() -> Flask:
 
 app = create_app()
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
+    # socketio.run(app, debug=True, port=port, host='0.0.0.0') 
     app.run(debug=True, port=port, host='0.0.0.0')
+

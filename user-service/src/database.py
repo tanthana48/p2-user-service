@@ -36,3 +36,8 @@ class Video(db.Model):
     thumbnail_filename = db.Column(db.String(255), nullable=True)
 
     user = db.relationship("User", backref="videos")
+
+class Like(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    video_id = db.Column(db.Integer, db.ForeignKey('video.id'), nullable=False)

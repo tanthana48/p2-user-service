@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify, Blueprint
-from database import User, Video, db
+from database import User, Video, Like, db
 from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
 import os
 import m3u8
-
+from socket_instance import socketio
+from flask_socketio import join_room, leave_room, emit
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
@@ -119,6 +120,7 @@ def increment_views():
     if video:
         video.views += 1
         db.session.commit()
+        socketio.emit('view_incremented', {'video_id': video_id, 'views': video.views})
         return jsonify(success=True, views=video.views)
     else:
         return jsonify(error="Video not found", video_id=video_id), 404
@@ -146,4 +148,41 @@ def get_videos():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
 
+# @socketio.on('like-video')
+@video_uploading_service.route('/api/increment-likes', methods=['POST'])
+def handle_like_video():
+    user_id = request.json['user_id']
+    user_id = User.query.get(user_id)
+    video_id = request.json['video_id']
+    video_id = Video.query.get(video_id)
+    if user_id:
+        existing_like = Like.query.filter_by(user_id=user_id, video_id=video_id).first()
+        if not existing_like:
+            new_like = Like(user_id=user_id, video_id=video_id)
+            db.session.add(new_like)
+            db.session.commit()
+
+            new_like_count = Like.query.filter_by(video_id=video_id).count()
+            # emit('update-like-count', {'video_id': video_id, 'like_count': new_like_count}, broadcast=True)
+
+# @socketio.on('unlike-video')
+@video_uploading_service.route('/api/descrement-likes', methods=['POST'])
+def handle_unlike_video(data):
+    user_id = request.json['user_id']
+    user_id = User.query.get(user_id)
+    video_id = request.json['video_id']
+    video_id = Video.query.get(video_id) 
+    if user_id:
+        existing_like = Like.query.filter_by(user_id=user_id, video_id=video_id).first()
+        if existing_like:
+            db.session.delete(existing_like)
+            db.session.commit()
+
+            new_like_count = Like.query.filter_by(video_id=video_id).count()
+            # emit('update-like-count', {'video_id': video_id, 'like_count': new_like_count}, broadcast=True)
+
+
+def get_like_count_for_video(video_id):
+    return Like.query.filter_by(video_id=video_id).count()
