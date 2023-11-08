@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint
-from database import User, Video, Like, Comment, db
+from database import User, Video, Like, Comment, Notification, db
 from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
@@ -184,6 +184,7 @@ def handle_unlike_video():
 def get_like_count_for_video(video_id):
     return Like.query.filter_by(video_id=video_id).count()
 
+# @socketio.on('post-comment')
 @video_uploading_service.route('/api/post-comment', methods=['POST'])
 def handle_post_comment():
     user_id = request.json['user_id']
@@ -206,3 +207,38 @@ def handle_post_comment():
         #     'text': text,
         #     'timestamp': new_comment.created_at.isoformat()
         # }, room=video_id)
+        notify_users(video_id,text)
+
+@video_uploading_service.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    user_id = request.json['user_id']
+    user_id = User.query.get(user_id)
+    notifications = Notification.query.filter_by(user_id=user_id, read=False).all()
+    return jsonify([notification.to_dict() for notification in notifications])
+
+@video_uploading_service.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+def mark_notification_as_read():
+    user_id = request.json['user_id']
+    user_id = User.query.get(user_id)
+    notification_id = request.json['notification_id']
+    notification_id = Notification.query.get(notification_id)
+    if notification_id and notification_id.user_id == user_id:
+        notification_id.read = True
+        db.session.commit()
+        return jsonify({'success': True})
+    return jsonify({'error': 'Invalid notification ID or user ID'}), 400
+
+def notify_users(video_id, comment_text):
+
+    users_liked = User.query.join(Like).filter(Like.video_id == video_id).all()
+    users_commented = User.query.join(Comment).filter(Comment.video_id == video_id).all()
+    users_to_notify = list(set(users_liked + users_commented))
+
+    message = f"New activity on a video you're following: {comment_text}"
+
+    for user in users_to_notify:
+        notification = Notification(user_id=user.id, message=message)
+        db.session.add(notification)
+        
+        # emit('new-notification', {'message': message}, room=str(user.id))
+    db.session.commit()
