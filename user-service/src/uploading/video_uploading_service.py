@@ -118,7 +118,6 @@ def increment_views():
     if video:
         video.views += 1
         db.session.commit()
-        socketio.emit('view_incremented', {'video_id': video_id, 'views': video.views})
         return jsonify(success=True, views=video.views)
     else:
         return jsonify(error="Video not found", video_id=video_id), 404
