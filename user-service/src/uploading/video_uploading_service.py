@@ -70,13 +70,16 @@ def confirm_upload():
             base_name = os.path.splitext(video_name)[0]
             hls_filename = base_name + '_converted.m3u8'
             s3_filename = base_name + '_converted.mp4'
+            thumbnail_filename = base_name + '_converted.jpg'
             r.rpush('video_name', video_name)
             user = User.query.filter_by(username=username).first()
             new_video = Video(title=video_title, 
                             description=video_description,
                             user_id=user.id,
                             s3_filename=s3_filename,
-                            hls_filename = hls_filename)
+                            hls_filename = hls_filename,
+                            thumbnail_filename= thumbnail_filename,
+                            status='uploading')
             db.session.add(new_video)
             db.session.commit()
             print(f"Published video name: {video_name}")
@@ -138,10 +141,10 @@ def get_videos():
                 'views': video.views,
                 'user_id': video.user_id,
                 's3_filename': video.s3_filename,
-                'hls_filename': video.hls_filename
+                'hls_filename': video.hls_filename,
+                'status': video.status
             }
-            if video.thumbnail_filename:
-                video_data['thumbnail_filename'] = video.thumbnail_filename
+            if video.status == 'success':
                 video_list.append(video_data)
 
         return jsonify({'videos': video_list}), 200
@@ -246,17 +249,16 @@ def notify_users(video_id, comment_text):
         # emit('new-notification', {'message': message}, room=str(user.id))
     db.session.commit()
 
-@video_uploading_service.route('/api/update-thumbnail', methods=['POST'])
+@video_uploading_service.route('/api/worker-status', methods=['POST'])
 def update_thumbnail():
     data = request.json
     video_name = data["file_name"]
-    base_name = os.path.splitext(video_name)[0]
-    thumbnail_filename = base_name + ".jpg"
+    status = data["status"]
 
     video = Video.query.filter_by(s3_filename=video_name).first()
     if video:
-        video.thumbnail_filename = thumbnail_filename
+        video.status = status
         db.session.commit()
-        return jsonify({'message': 'Thumbnail updated successfully'}), 200
+        return jsonify({'message': 'Workers updated successfully'}), 200
     else:
         return jsonify({'error': 'Video not found'}), 404

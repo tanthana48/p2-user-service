@@ -34,6 +34,7 @@ class Video(db.Model):
     s3_filename = db.Column(db.String(255), nullable=False)
     hls_filename = db.Column(db.String(255), nullable=True)
     thumbnail_filename = db.Column(db.String(255), nullable=True)
+    status = db.Column(db.String(50), nullable=True)
 
     user = db.relationship("User", backref="videos")
 
