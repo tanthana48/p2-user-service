@@ -157,7 +157,9 @@ def get_myvideos(username):
     try:
         user = User.query.filter_by(username=username).first()
         user_id = user.id
+        print(user_id)
         videos = Video.query.filter_by(user_id=user_id).first()
+        print(videos)
         if not videos:
             return jsonify({'message': 'No videos found'}), 404
 
@@ -175,6 +177,7 @@ def get_myvideos(username):
                 'status': video.status
             }
             video_list.append(video_data)
+            print(video_list)
 
         return jsonify({'videos': video_list}), 200
 
@@ -281,7 +284,7 @@ def notify_users(video_id, comment_text):
 @video_uploading_service.route('/api/worker-status', methods=['POST'])
 def update_thumbnail():
     data = request.json
-    video_name = data["file_name"]
+    video_name = data["video_filename"]
     status = data["status"]
 
     video = Video.query.filter_by(s3_filename=video_name).first()
