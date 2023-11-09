@@ -128,17 +128,21 @@ def get_videos():
         if not videos:
             return jsonify({'message': 'No videos found'}), 404
 
-        video_list = [{
-            'id': video.id,
-            'title': video.title,
-            'description': video.description,
-            'date': video.date,
-            'views': video.views,
-            'user_id': video.user_id,
-            's3_filename': video.s3_filename,
-            'hls_filename': video.hls_filename,
-            'thumbnail_filename': video.thumbnail_filename
-        } for video in videos]
+        video_list = []
+        for video in videos:
+            video_data = {
+                'id': video.id,
+                'title': video.title,
+                'description': video.description,
+                'date': video.date,
+                'views': video.views,
+                'user_id': video.user_id,
+                's3_filename': video.s3_filename,
+                'hls_filename': video.hls_filename
+            }
+            if video.thumbnail_filename:
+                video_data['thumbnail_filename'] = video.thumbnail_filename
+            video_list.append(video_data)
 
         return jsonify({'videos': video_list}), 200
 
