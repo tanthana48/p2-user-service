@@ -142,7 +142,7 @@ def get_videos():
             }
             if video.thumbnail_filename:
                 video_data['thumbnail_filename'] = video.thumbnail_filename
-            video_list.append(video_data)
+                video_list.append(video_data)
 
         return jsonify({'videos': video_list}), 200
 
