@@ -151,6 +151,37 @@ def get_videos():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@video_uploading_service.route('/api/myvideos', methods=['POST'])
+def get_myvideos():
+    try:
+        data = request.json
+        username = data['username']
+        user = User.query.filter_by(username=username).first()
+        user_id = user.id
+        videos = Video.query.filter_by(user_id=user_id).first()
+        if not videos:
+            return jsonify({'message': 'No videos found'}), 404
+
+        video_list = []
+        for video in videos:
+            video_data = {
+                'id': video.id,
+                'title': video.title,
+                'description': video.description,
+                'date': video.date,
+                'views': video.views,
+                'user_id': video.user_id,
+                's3_filename': video.s3_filename,
+                'hls_filename': video.hls_filename,
+                'status': video.status
+            }
+            video_list.append(video_data)
+
+        return jsonify({'videos': video_list}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     
 
 # @socketio.on('like-video')
