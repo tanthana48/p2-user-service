@@ -39,5 +39,5 @@ app, socketio = create_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, port=port, debug=True, allow_unsafe_werkzeug=True)
 
