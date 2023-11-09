@@ -41,7 +41,10 @@ def get_presigned_m3u8():
 @video_uploading_service.route('/api/get-presigned-url-thumbnail', methods=['POST'])
 def get_presigned_url_thumbnail():
     data = request.json
-    thumbnail_filename = data['thumbnail_filename']
+    print('Data received:', data)  # Add this line for debugging
+    thumbnail_filename = data.get('thumbnail_filename')
+    if not thumbnail_filename:
+        return jsonify({'error': 'thumbnail_filename is required'}), 400
 
     presigned_url = generate_presigned_url_get(thumbnail_filename)
     print(presigned_url)
@@ -156,16 +159,14 @@ def get_videos():
 def get_myvideos(username):
     try:
         user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
         user_id = user.id
-        print(user_id)
-        videos = Video.query.filter_by(user_id=user_id).first()
-        print(videos)
+        videos = Video.query.filter_by(user_id=user_id).all()  # Use .all() here
         if not videos:
             return jsonify({'message': 'No videos found'}), 404
 
-        video_list = []
-        for video in videos:
-            video_data = {
+        video_list = [ {
                 'id': video.id,
                 'title': video.title,
                 'description': video.description,
@@ -175,9 +176,7 @@ def get_myvideos(username):
                 's3_filename': video.s3_filename,
                 'hls_filename': video.hls_filename,
                 'status': video.status
-            }
-            video_list.append(video_data)
-            print(video_list)
+            } for video in videos ]
 
         return jsonify({'videos': video_list}), 200
 
