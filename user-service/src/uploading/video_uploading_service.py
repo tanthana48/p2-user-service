@@ -41,8 +41,8 @@ def get_presigned_m3u8():
 @video_uploading_service.route('/api/get-presigned-url-thumbnail', methods=['POST'])
 def get_presigned_url_thumbnail():
     data = request.json
-    print('Data received:', data)  # Add this line for debugging
-    thumbnail_filename = data.get('thumbnail_filename')
+    print('Data received:', data)
+    thumbnail_filename = data['thumbnail_filename']
     if not thumbnail_filename:
         return jsonify({'error': 'thumbnail_filename is required'}), 400
 
