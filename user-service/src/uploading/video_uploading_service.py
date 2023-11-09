@@ -41,7 +41,6 @@ def get_presigned_m3u8():
 @video_uploading_service.route('/api/get-presigned-url-thumbnail', methods=['POST'])
 def get_presigned_url_thumbnail():
     data = request.json
-    print('Data received:', data)
     thumbnail_filename = data['thumbnail_filename']
     if not thumbnail_filename:
         return jsonify({'error': 'thumbnail_filename is required'}), 400
@@ -145,6 +144,7 @@ def get_videos():
                 'user_id': video.user_id,
                 's3_filename': video.s3_filename,
                 'hls_filename': video.hls_filename,
+                'thumbnail_filename': video.thumbnail_filename,
                 'status': video.status
             }
             if video.status == 'success':
@@ -175,6 +175,7 @@ def get_myvideos(username):
                 'user_id': video.user_id,
                 's3_filename': video.s3_filename,
                 'hls_filename': video.hls_filename,
+                'thumbnail_filename': video.thumbnail_filename,
                 'status': video.status
             } for video in videos ]
 
@@ -182,7 +183,31 @@ def get_myvideos(username):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
+def delete_video_by_id(video_id):
+    try:
+        video = Video.query.get(video_id)
+        if video is None:
+            return False
+        
+        db.session.delete(video)
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        return False
+
+@video_uploading_service.route('/api/delete-video/<int:video_id>', methods=['DELETE'])
+def delete_video(video_id):
+    try:
+        success = delete_video_by_id(video_id)
+        if success:
+            return jsonify({'message': 'Video successfully deleted'}), 200
+        else:
+            return jsonify({'error': 'Could not delete video'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Internal server error'}), 500
+
 
 # @socketio.on('like-video')
 @video_uploading_service.route('/api/increment-likes', methods=['POST'])
