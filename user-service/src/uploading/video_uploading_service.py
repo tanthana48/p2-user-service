@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify, Blueprint
+from flask import Flask, request, jsonify, Blueprint, current_app
 from database import User, Video, Like, Comment, Notification, db
 from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
 import os
 import m3u8
+from flask_socketio import send, emit
+from app import socketio
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
@@ -81,7 +83,7 @@ def confirm_upload():
                             s3_filename=s3_filename,
                             hls_filename = hls_filename,
                             thumbnail_filename= thumbnail_filename,
-                            status='uploading')
+                            status='processing')
             db.session.add(new_video)
             db.session.commit()
             print(f"Published video name: {video_name}")
@@ -122,6 +124,8 @@ def increment_views():
     if video:
         video.views += 1
         db.session.commit()
+
+        socketio.emit('update-view-count', {'video_id': video_id, 'views': video.views}, broadcast=True)
         return jsonify(success=True, views=video.views)
     else:
         return jsonify(error="Video not found", video_id=video_id), 404
@@ -318,3 +322,12 @@ def update_thumbnail():
         return jsonify({'message': 'Workers updated successfully'}), 200
     else:
         return jsonify({'error': 'Video not found'}), 404
+
+def register_socketio_events(socketio):
+    @socketio.on('connect')
+    def handle_connect():
+        print('Client connected')
+
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        print('Client disconnected')
