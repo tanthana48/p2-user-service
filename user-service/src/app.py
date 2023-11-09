@@ -2,16 +2,17 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from authentication.user_service import user_service
-from uploading.video_uploading_service import video_uploading_service
+from uploading.video_uploading_service import video_uploading_service, register_socketio_events
 from database import db, bcrypt
 from flask_socketio import SocketIO
 
 def create_app() -> Flask:
     """Create flask app."""
     app = Flask(__name__)
-  
+    socketio = SocketIO(app, cors_allowed_origins="*")
     CORS(app)
     app.secret_key = os.environ.get("SECRET_KEY", 'your_secret_key')
+    register_socketio_events(socketio)
     app.register_blueprint(user_service)
     app.register_blueprint(video_uploading_service)
 
@@ -30,8 +31,6 @@ def create_app() -> Flask:
 
     with app.app_context():
         db.create_all()
-    
-    socketio = SocketIO(app, cors_allowed_origins="*")
 
     return app, socketio
 
@@ -40,6 +39,5 @@ app, socketio = create_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    video_uploading_service.register_socketio_events(socketio)
     socketio.run(app, debug=True)
 

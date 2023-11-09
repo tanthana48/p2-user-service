@@ -5,8 +5,7 @@ import boto3
 from redis import Redis
 import os
 import m3u8
-from flask_socketio import send, emit
-from app import socketio
+from flask_socketio import SocketIO, emit
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
@@ -323,7 +322,7 @@ def update_thumbnail():
     else:
         return jsonify({'error': 'Video not found'}), 404
 
-def register_socketio_events(socketio):
+def register_socketio_events(socketio: SocketIO):
     @socketio.on('connect')
     def handle_connect():
         print('Client connected')
