@@ -68,15 +68,14 @@ def confirm_upload():
         username = data['username']
         try:
             base_name = os.path.splitext(video_name)[0]
-            thumbnail_filename = base_name + '_converted.jpg'
             hls_filename = base_name + '_converted.m3u8'
+            s3_filename = base_name + '_converted.mp4'
             r.rpush('video_name', video_name)
             user = User.query.filter_by(username=username).first()
             new_video = Video(title=video_title, 
                             description=video_description,
                             user_id=user.id,
-                            s3_filename=video_name,
-                            thumbnail_filename=thumbnail_filename,
+                            s3_filename=s3_filename,
                             hls_filename = hls_filename)
             db.session.add(new_video)
             db.session.commit()
@@ -242,3 +241,18 @@ def notify_users(video_id, comment_text):
         
         # emit('new-notification', {'message': message}, room=str(user.id))
     db.session.commit()
+
+@video_uploading_service.route('/api/update-thumbnail', methods=['POST'])
+def update_thumbnail():
+    data = request.json
+    video_name = data["file_name"]
+    base_name = os.path.splitext(video_name)[0]
+    thumbnail_filename = base_name + ".jpg"
+
+    video = Video.query.filter_by(s3_filename=video_name).first()
+    if video:
+        video.thumbnail_filename = thumbnail_filename
+        db.session.commit()
+        return jsonify({'message': 'Thumbnail updated successfully'}), 200
+    else:
+        return jsonify({'error': 'Video not found'}), 404
