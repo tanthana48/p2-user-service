@@ -152,11 +152,9 @@ def get_videos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@video_uploading_service.route('/api/myvideos', methods=['POST'])
-def get_myvideos():
+@video_uploading_service.route('/api/myvideos/<username>', methods=['GET'])
+def get_myvideos(username):
     try:
-        data = request.json
-        username = data['username']
         user = User.query.filter_by(username=username).first()
         user_id = user.id
         videos = Video.query.filter_by(user_id=user_id).first()
