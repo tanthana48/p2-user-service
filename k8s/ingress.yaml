@@ -4,6 +4,8 @@ metadata:
   name: ingress
   annotations:
     ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/upgrade-proxy: "true"
+    nginx.ingress.kubernetes.io/enable-websockets: "true"
 spec:
   rules:
   - http:

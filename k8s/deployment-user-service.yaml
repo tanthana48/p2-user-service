@@ -29,7 +29,7 @@ spec:
             - name: UMS_DB_PORT
               value: "3306"
             - name: UMS_DB_IP
-              value: "mariadb"
+              value: "mariadb.default.svc"
             - name: PORT
               value: "8080"
             - name: AWS_ACCESS_KEY_ID
@@ -39,7 +39,7 @@ spec:
             - name: AWS_BUCKET_NAME
               value: flasks3scalable
             - name: REDIS_HOST
-              value: "redis-service.default.svc.cluster.local"
+              value: "redis-service.default.svc"
             - name: REDIS_PORT
               value: "6379"
       imagePullSecrets:
