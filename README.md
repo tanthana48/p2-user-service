@@ -1,6 +1,6 @@
 # Toktik
 
-A video steaming platform
+A video streaming platform
 
 
 
