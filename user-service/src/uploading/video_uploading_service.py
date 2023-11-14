@@ -5,7 +5,6 @@ import boto3
 from redis import Redis
 import os
 import m3u8
-from flask_socketio import SocketIO, emit
 
 video_uploading_service = Blueprint("video_uploading_service", __name__)
 
@@ -123,7 +122,6 @@ def increment_views():
     if video:
         video.views += 1
         db.session.commit()
-        SocketIO.emit('update-view-count', {'video_id': video_id, 'views': video.views}, broadcast=True)
         return jsonify(success=True, views=video.views)
     else:
         return jsonify(error="Video not found", video_id=video_id), 404
@@ -321,11 +319,3 @@ def update_thumbnail():
     else:
         return jsonify({'error': 'Video not found'}), 404
 
-def register_socketio_events(socketio: SocketIO):
-    @socketio.on('connect')
-    def handle_connect():
-        print('Client connected')
-
-    @socketio.on('disconnect')
-    def handle_disconnect():
-        print('Client disconnected')
