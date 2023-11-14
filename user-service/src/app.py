@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from authentication.user_service import user_service
-from uploading.video_uploading_service import video_uploading_service, register_socketio_events
+from uploading.video_uploading_service import video_uploading_service
 from database import db, bcrypt
 
 def create_app() -> Flask:
