@@ -30,11 +30,13 @@ class Video(db.Model):
     description = db.Column(db.String(255), nullable=True)
     date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     views = db.Column(db.Integer, default=0)
+    likes = db.Column(db.Integer, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     s3_filename = db.Column(db.String(255), nullable=False)
     hls_filename = db.Column(db.String(255), nullable=True)
     thumbnail_filename = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(50), nullable=True)
+    isLikedByCurrentUser = db.Column(db.Boolean, default=False)
 
     user = db.relationship("User", backref="videos")
 
