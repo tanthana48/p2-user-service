@@ -44,8 +44,8 @@ class Like(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     video_id = db.Column(db.Integer, db.ForeignKey('video.id'), nullable=False)
-    user = db.relationship("User", backref="likes")
-    user = db.relationship("Video", backref="likes")
+    user = db.relationship("User", backref="userLikes")
+    video = db.relationship("Video", backref="videoLikes")
 
 
 class Comment(db.Model):
@@ -54,7 +54,7 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
-    user = db.relationship("User", backref="comments")
-    user = db.relationship("Video", backref="comments")
+    user = db.relationship("User", backref="userCcomments")
+    video = db.relationship("Video", backref="videoComments")
 
     
