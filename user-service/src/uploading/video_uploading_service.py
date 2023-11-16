@@ -212,10 +212,11 @@ def delete_video(video_id):
     
 @video_uploading_service.route('/api/check-like/<int:video_id>/<username>', methods=['GET'])
 def check_user_like(video_id,username):
-    user_id = User.query.filter_by(username=username).first()
-    like = Like.query.filter_by(user_id=user_id, video_id=video_id).first()
-    is_liked = like is not None
-    return jsonify({'isLiked': is_liked})
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    like = Like.query.filter_by(user_id=user.id, video_id=video_id).first()
+    return jsonify({'isLiked': like is not None})
 
 @video_uploading_service.route('/api/increment-likes/<username>', methods=['POST'])
 def handle_like_video(username):
@@ -241,8 +242,6 @@ def handle_unlike_video(username):
         existing_like = Like.query.filter_by(user_id=user_id, video_id=video_id).first()
         db.session.delete(existing_like)
         db.session.commit()
-            # new_like_count = Like.query.filter_by(video_id=video_id).count()
-            # emit('update-like-count', {'video_id': video_id, 'like_count': new_like_count}, broadcast=True)
         return jsonify(success=True, likes=video_id.likes)
     else:
         return jsonify(error="Video not found", video_id=video_id), 404
@@ -261,35 +260,12 @@ def handle_post_comment(username):
         db.session.add(new_comment)
         db.session.commit()
 
-        # emit('new-comment', {
-        #     'user_id': user_id,
-        #     'video_id': video_id,
-        #     'text': text,
-        #     'timestamp': new_comment.created_at.isoformat()
-        # }, room=video_id)
         notify_users(video_id,text)
 
 @video_uploading_service.route('/api/comments/<int:video_id>', methods=['GET'])
 def get_comments(video_id):
     comments = Comment.query.filter_by(video_id=video_id).all()
     return jsonify([comment.to_dict() for comment in comments])
-
-# @video_uploading_service.route('/api/notifications/<username>', methods=['GET'])
-# def get_notifications(username):
-#     user_id = User.query.filter_by(username=username).first()
-#     notifications = Notification.query.filter_by(user_id=user_id, read=False).all()
-#     return jsonify([notification.to_dict() for notification in notifications])
-
-# @video_uploading_service.route('/api/notifications/username/<int:notification_id>/read', methods=['POST'])
-# def mark_notification_as_read(username):
-#     user_id = User.query.filter_by(username=username).first()
-#     notification_id = request.json['notification_id']
-#     notification_id = Notification.query.get(notification_id)
-#     if notification_id and notification_id.user_id == user_id:
-#         notification_id.read = True
-#         db.session.commit()
-#         return jsonify({'success': True})
-#     return jsonify({'error': 'Invalid notification ID or user ID'}), 400
 
 def notify_users(video_id, comment_text):
 
