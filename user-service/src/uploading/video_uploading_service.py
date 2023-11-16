@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint, current_app
-from database import User, Video, Like, Comment, Notification, db
+from database import User, Video, Like, Comment, db
 from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
