@@ -3,6 +3,7 @@ from database import User, Video, Like, Comment, Notification, db
 from botocore.exceptions import NoCredentialsError
 import boto3
 from redis import Redis
+import json
 import os
 import m3u8
 
@@ -226,8 +227,6 @@ def handle_like_video(username):
         new_like = Like(user_id=user_id, video_id=video_id)
         db.session.add(new_like)
         db.session.commit()
-            # new_like_count = Like.query.filter_by(video_id=video_id).count()
-            # emit('update-like-count', {'video_id': video_id, 'like_count': new_like_count}, broadcast=True)
         return jsonify(success=True, likes=video_id.likes)
     else:
         return jsonify(error="Video not found", video_id=video_id), 404
@@ -297,15 +296,20 @@ def notify_users(video_id, comment_text):
     users_liked = User.query.join(Like).filter(Like.video_id == video_id).all()
     users_commented = User.query.join(Comment).filter(Comment.video_id == video_id).all()
     users_to_notify = list(set(users_liked + users_commented))
-
     message = f"New activity on a video you're following: {comment_text}"
 
-    for user in users_to_notify:
-        notification = Notification(user_id=user.id, message=message)
-        db.session.add(notification)
-        
-        # emit('new-notification', {'message': message}, room=str(user.id))
-    db.session.commit()
+    notifications = [
+        {
+            'user_id': user.id,
+            'message': message,
+            'video_id': video_id
+        }
+        for user in users_to_notify
+    ]
+
+    notifications_json = json.dumps(notifications)
+
+    r.rpush('notifications', notifications_json)
 
 @video_uploading_service.route('/api/worker-status', methods=['POST'])
 def update_thumbnail():
