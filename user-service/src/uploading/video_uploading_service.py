@@ -261,6 +261,7 @@ def handle_post_comment(username):
         db.session.commit()
 
         notify_users(video.id,text)
+        return jsonify({'message': 'Successfully commented'}), 200
 
 @video_uploading_service.route('/api/comments/<int:video_id>', methods=['GET'])
 def get_comments(video_id):
