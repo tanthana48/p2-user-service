@@ -54,7 +54,12 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
-    # user = db.relationship("User", backref="userCcomments")
-    # video = db.relationship("Video", backref="videoComments")
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'video_id': self.video_id,
+            'text': self.text,
+        }
 
     
