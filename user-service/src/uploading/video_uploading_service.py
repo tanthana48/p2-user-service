@@ -232,7 +232,7 @@ def handle_like_video(username):
     else:
         return jsonify(error="Video not found"), 404
 
-@video_uploading_service.route('/api/descrement-likes/<username>', methods=['POST'])
+@video_uploading_service.route('/api/decrement-likes/<username>', methods=['POST'])
 def handle_unlike_video(username):
     video_id = request.json['video_id']
     video = Video.query.get(video_id) 
