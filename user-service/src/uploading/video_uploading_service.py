@@ -225,7 +225,7 @@ def handle_like_video(username):
     user_id = User.query.filter_by(username=username).first()
     if (video_id):
         video_id.likes += 1
-        new_like = Like(user_id=user_id.id, video_id=video_id)
+        new_like = Like(user_id=user_id.id, video_id=video_id.id)
         db.session.add(new_like)
         db.session.commit()
         return jsonify(success=True, likes=video_id.likes)
@@ -239,7 +239,7 @@ def handle_unlike_video(username):
     user_id = User.query.filter_by(username=username).first()
     if video_id:
         video_id.likes-=1
-        existing_like = Like.query.filter_by(user_id=user_id.id, video_id=video_id).first()
+        existing_like = Like.query.filter_by(user_id=user_id.id, video_id=video_id.id).first()
         db.session.delete(existing_like)
         db.session.commit()
         return jsonify(success=True, likes=video_id.likes)
@@ -256,7 +256,7 @@ def handle_post_comment(username):
         return jsonify({'message': 'No text'}), 404
 
     if user_id and video_id:
-        new_comment = Comment(user_id=user_id.id, video_id=video_id, text=text)
+        new_comment = Comment(user_id=user_id.id, video_id=video_id.id, text=text)
         db.session.add(new_comment)
         db.session.commit()
 
