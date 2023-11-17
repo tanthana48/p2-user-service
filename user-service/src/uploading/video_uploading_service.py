@@ -249,18 +249,18 @@ def handle_unlike_video(username):
 @video_uploading_service.route('/api/post-comment/<username>', methods=['POST'])
 def handle_post_comment(username):
     video_id = request.json['video_id']
-    video_id = Video.query.get(video_id) 
+    video = Video.query.get(video_id) 
     text = request.json['text']
-    user_id = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=username).first()
     if not text.strip():
         return jsonify({'message': 'No text'}), 404
 
-    if user_id and video_id:
-        new_comment = Comment(user_id=user_id.id, video_id=video_id.id, text=text)
+    if user and video:
+        new_comment = Comment(user_id=user.id, video_id=video.id, text=text)
         db.session.add(new_comment)
         db.session.commit()
 
-        notify_users(video_id,text)
+        notify_users(video.id,text)
 
 @video_uploading_service.route('/api/comments/<int:video_id>', methods=['GET'])
 def get_comments(video_id):
