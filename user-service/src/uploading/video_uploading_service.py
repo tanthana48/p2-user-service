@@ -221,30 +221,30 @@ def check_user_like(video_id,username):
 @video_uploading_service.route('/api/increment-likes/<username>', methods=['POST'])
 def handle_like_video(username):
     video_id = request.json['video_id']
-    video_id = Video.query.get(video_id)
-    user_id = User.query.filter_by(username=username).first()
-    if (video_id):
-        video_id.likes += 1
-        new_like = Like(user_id=user_id.id, video_id=video_id.id)
+    video= Video.query.get(video_id)
+    user= User.query.filter_by(username=username).first()
+    if (video):
+        video.likes += 1
+        new_like = Like(user_id=user.id, video_id=video.id)
         db.session.add(new_like)
         db.session.commit()
-        return jsonify(success=True, likes=video_id.likes)
+        return jsonify(success=True, likes=video.likes)
     else:
-        return jsonify(error="Video not found", video_id=video_id), 404
+        return jsonify(error="Video not found"), 404
 
 @video_uploading_service.route('/api/descrement-likes/<username>', methods=['POST'])
 def handle_unlike_video(username):
     video_id = request.json['video_id']
-    video_id = Video.query.get(video_id) 
-    user_id = User.query.filter_by(username=username).first()
-    if video_id:
-        video_id.likes-=1
-        existing_like = Like.query.filter_by(user_id=user_id.id, video_id=video_id.id).first()
+    video = Video.query.get(video_id) 
+    user = User.query.filter_by(username=username).first()
+    if video:
+        video.likes-=1
+        existing_like = Like.query.filter_by(user_id=user.id, video_id=video.id).first()
         db.session.delete(existing_like)
         db.session.commit()
-        return jsonify(success=True, likes=video_id.likes)
+        return jsonify(success=True, likes=video.likes)
     else:
-        return jsonify(error="Video not found", video_id=video_id), 404
+        return jsonify(error="Video not found"), 404
 
 @video_uploading_service.route('/api/post-comment/<username>', methods=['POST'])
 def handle_post_comment(username):
