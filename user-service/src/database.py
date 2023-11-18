@@ -60,6 +60,7 @@ class Comment(db.Model):
             'user_id': self.user_id,
             'video_id': self.video_id,
             'text': self.text,
+            'created_at': self.created_at
         }
 
     
